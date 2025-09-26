@@ -16,6 +16,18 @@ export interface ARIBridge {
 }
 
 export class ARIClient {
+  /**
+   * Reproduce un ringback en el canal especificado usando el recurso 'sound:ring'.
+   */
+  async playRingback(channelID: string): Promise<void> {
+    // sound:ring es el tono de ringback estándar de Asterisk
+    const data = { media: 'sound:ring', lang: 'es' };
+    const resp = await this.doRequest('POST', `/ari/channels/${channelID}/play`, data);
+    if (!resp.ok) {
+      const body = await resp.text();
+      throw new Error(`Play ringback failed: ${body}`);
+    }
+  }
   private baseURL: string;
   private user: string;
   private pass: string;

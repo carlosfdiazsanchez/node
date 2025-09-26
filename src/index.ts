@@ -62,6 +62,13 @@ async function main() {
                 pendingCalls[channelID] = outgoingID;
                 pendingCalls[outgoingID] = channelID;
                 console.log('Llamada originada:', channelID, '->', outgoingID);
+                // Reproducir ringback en el canal de origen
+                try {
+                  await ariClient.playRingback(channelID);
+                  console.log('Ringback iniciado en canal de origen:', channelID);
+                } catch (err) {
+                  console.error('Error reproduciendo ringback:', err);
+                }
               } catch (err) {
                 console.error('Error originando llamada:', err);
               }
