@@ -9,20 +9,11 @@ const config = {
   appName: process.env.ARI_APP_NAME || 'node',
 };
 
-const baseURL = config.baseUrl.replace(/^wss?:\/\//, 'https://');
-
-const configForHttp = {
-  baseUrl: baseURL,
-  user: config.user,
-  pass: config.pass,
-  appName: config.appName,
-};
-
 export async function handleIncomingCall(channelId: string) {
   console.log(`[handleIncomingCall] Iniciando para canal: ${channelId}`);
   try {
-    await answerChannel(configForHttp, channelId);
-    await playAudioOnChannel(configForHttp, channelId, 'sound:ring');
+    await answerChannel(channelId);
+    await playAudioOnChannel(channelId, 'sound:ring');
   } catch (error) {
     console.error(`[handleIncomingCall] Error en canal ${channelId}:`, error);
   }

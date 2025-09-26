@@ -1,10 +1,11 @@
-export interface AriConfig {
-	baseUrl: string;
-	user: string;
-	pass: string;
-}
+const config = {
+  baseUrl: process.env.ARI_URL || 'https://asterisk.ridinn.com/ari/events',
+  user: process.env.ARI_USER || 'node',
+  pass: process.env.ARI_PASS || 'ari_password',
+  appName: process.env.ARI_APP_NAME || 'node',
+};
 
-export async function answerChannel(config: AriConfig, channelId: string): Promise<void> {
+export async function answerChannel(channelId: string): Promise<void> {
 	const url = `${config.baseUrl}/channels/${channelId}/answer`;
 	await fetch(url, {
 		method: 'POST',
@@ -15,7 +16,7 @@ export async function answerChannel(config: AriConfig, channelId: string): Promi
 	});
 }
 
-export async function hangupChannel(config: AriConfig, channelId: string): Promise<void> {
+export async function hangupChannel(channelId: string): Promise<void> {
 	const url = `${config.baseUrl}/channels/${channelId}`;
 	await fetch(url, {
 		method: 'DELETE',
@@ -26,7 +27,7 @@ export async function hangupChannel(config: AriConfig, channelId: string): Promi
 	});
 }
 
-export async function playAudioOnChannel(config: AriConfig, channelId: string, media: string): Promise<void> {
+export async function playAudioOnChannel(channelId: string, media: string): Promise<void> {
 	const url = `${config.baseUrl}/channels/${channelId}/play`;
 	await fetch(url, {
 		method: 'POST',
@@ -34,11 +35,11 @@ export async function playAudioOnChannel(config: AriConfig, channelId: string, m
 			'Authorization': 'Basic ' + Buffer.from(`${config.user}:${config.pass}`).toString('base64'),
 			'Content-Type': 'application/json',
 		},
-		body: JSON.stringify({ media }),
+		body: JSON.stringify({ media ,lang: 'es' }),
 	});
 }
 
-export async function createBridge(config: AriConfig): Promise<string> {
+export async function createBridge(): Promise<string> {
 	const url = `${config.baseUrl}/bridges`;
 	const resp = await fetch(url, {
 		method: 'POST',
@@ -59,7 +60,7 @@ export async function createBridge(config: AriConfig): Promise<string> {
 	throw new Error('No se pudo obtener el id del bridge');
 }
 
-export async function addChannelsToBridge(config: AriConfig, bridgeId: string, channelIds: string[]): Promise<void> {
+export async function addChannelsToBridge(bridgeId: string, channelIds: string[]): Promise<void> {
 	const url = `${config.baseUrl}/bridges/${bridgeId}/addChannel?channel=${channelIds.join(',')}`;
 	await fetch(url, {
 		method: 'POST',
