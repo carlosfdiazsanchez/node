@@ -1,6 +1,6 @@
 
 import WebSocket from 'ws';
-import { answerChannel, playAudioOnChannel } from './ari-api-rest.ts';
+import { answerChannel, playAudioOnChannel, createBridge, addChannelsToBridge, originateChannel } from './ari-api-rest.ts';
 
 const config = {
   baseUrl: 'wss://asterisk.ridinn.com/ari/events',
@@ -14,6 +14,17 @@ export async function handleIncomingCall(channelId: string) {
   try {
     await answerChannel(channelId);
     await playAudioOnChannel(channelId, 'sound:ring');
+    // Originar llamada a 2002 y unir ambos canales en un bridge
+    const bridgeId = await createBridge();
+    await addChannelsToBridge(bridgeId, [channelId]);
+    console.log(`[handleIncomingCall] Canal ${channelId} agregado al bridge ${bridgeId}`);
+
+    // Originar llamada a 2002 (PJSIP/2002)
+    const appName = config.appName;
+    const endpoint = 'PJSIP/2002';
+    console.log(`[handleIncomingCall] Originando llamada a ${endpoint}`);
+    await originateChannel(endpoint, appName, { ORIGINATE_BRIDGE: bridgeId });
+    // El canal de 2002 será agregado al bridge en el evento StasisStart
   } catch (error) {
     console.error(`[handleIncomingCall] Error en canal ${channelId}:`, error);
   }
@@ -49,10 +60,19 @@ export const setupAri = async (app:any) => {
       ws.on('message', (data: WebSocket.Data) => {
         try {
           const event = JSON.parse(data.toString());
-          console.log('Evento:', event.type);
+          //console.log('Evento:', event.type);
           if (event.type === 'StasisStart' && event.channel) {
-            console.log('Llamada entrante:', event.channel.id);
-            // handleIncomingCall(event.channel.id);
+            // Si el canal tiene variable ORIGINATE_BRIDGE, es el canal originado a 2002
+            const bridgeId = event.args && event.args.length > 0 ? event.args[0] : (event.channel.variables && event.channel.variables.ORIGINATE_BRIDGE);
+            if (bridgeId) {
+              // Es el canal de 2002 originado, agregarlo al bridge
+              addChannelsToBridge(bridgeId, [event.channel.id]);
+              console.log(`[ARI] Canal ${event.channel.id} (2002) agregado al bridge ${bridgeId}`);
+            } else {
+              // Es la llamada entrante
+              console.log('Llamada entrante:', event.channel.id);
+              handleIncomingCall(event.channel.id);
+            }
           }
           if (event.type === 'ApplicationReplaced') {
             console.warn('Evento ApplicationReplaced recibido. Cerrando aplicación para evitar bucle de reconexión.');

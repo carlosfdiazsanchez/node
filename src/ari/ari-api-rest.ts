@@ -1,3 +1,28 @@
+export async function originateChannel(endpoint: string, app: string, variables: Record<string, string> = {}): Promise<string> {
+	const url = `${config.baseUrl}/channels`;
+	const body = {
+		endpoint,
+		app,
+		variables,
+	};
+	const resp = await fetch(url, {
+		method: 'POST',
+		headers: {
+			'Authorization': 'Basic ' + Buffer.from(`${config.user}:${config.pass}`).toString('base64'),
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify(body),
+	});
+	if (!resp.ok) throw new Error('No se pudo originar el canal');
+	const location = resp.headers.get('Location');
+	if (location) {
+		const parts = location.split('/');
+		return parts[parts.length - 1];
+	}
+	const data = await resp.json();
+	if (data && data.id) return data.id;
+	throw new Error('No se pudo obtener el id del canal originado');
+}
 const config = {
   baseUrl: 'https://asterisk.ridinn.com/ari/events',
   user: 'node',
