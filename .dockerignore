@@ -1,0 +1,8 @@
+node_modules
+dist
+.env
+.venv
+npm-debug.log
+docker-compose.override.yml
+Dockerfile
+.dockerignore
