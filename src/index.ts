@@ -12,13 +12,13 @@ app.use(express.json());
 
 // Inicialización de ARI y rutas
 async function main() {
-  const ariURL = process.env.ARI_URL || 'ws://127.0.0.1:8088/ari/events';
+  const ariURL = process.env.ARI_URL || 'wss://pbx.ridinn.com/ari/events';
   const ariUser = process.env.ARI_USER || 'ari_user';
   const ariPass = process.env.ARI_PASSWORD || 'ari_password';
   const appName = process.env.ARI_APP_NAME || 'node';
 
   // Parse base URL for HTTP
-  let baseURL = ariURL.replace('ws://', 'http://');
+  let baseURL = ariURL.replace(/^wss?:\/\//, 'https://');
   baseURL = baseURL.replace('/ari/events', '');
 
   ariClient = new ARIClient(baseURL, ariUser, ariPass);
