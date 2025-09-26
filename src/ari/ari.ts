@@ -52,7 +52,7 @@ export const setupAri = async (app:any) => {
           console.log('Evento:', event.type);
           if (event.type === 'StasisStart' && event.channel) {
             console.log('Llamada entrante:', event.channel.id);
-            handleIncomingCall(event.channel.id);
+            // handleIncomingCall(event.channel.id);
           }
           if (event.type === 'ApplicationReplaced') {
             console.warn('Evento ApplicationReplaced recibido. Cerrando aplicación para evitar bucle de reconexión.');
