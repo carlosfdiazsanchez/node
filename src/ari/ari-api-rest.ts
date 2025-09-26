@@ -1,8 +1,8 @@
 const config = {
-  baseUrl: process.env.ARI_URL || 'https://asterisk.ridinn.com/ari/events',
-  user: process.env.ARI_USER || 'node',
-  pass: process.env.ARI_PASS || 'ari_password',
-  appName: process.env.ARI_APP_NAME || 'node',
+  baseUrl: 'https://asterisk.ridinn.com/ari/events',
+  user: 'node',
+  pass: 'ari_password',
+  appName: 'node',
 };
 
 export async function answerChannel(channelId: string): Promise<void> {
