@@ -19,8 +19,15 @@ const configForHttp = {
 };
 
 export async function handleIncomingCall(channelId: string) {
-  await answerChannel(configForHttp, channelId);
-  await playAudioOnChannel(configForHttp, channelId, 'sound:ring');
+  console.log(`[handleIncomingCall] Iniciando para canal: ${channelId}`);
+  try {
+    await answerChannel(configForHttp, channelId);
+    console.log(`[handleIncomingCall] Canal ${channelId} contestado`);
+    await playAudioOnChannel(configForHttp, channelId, 'sound:ring');
+    console.log(`[handleIncomingCall] Audio 'sound:ring' reproducido en canal ${channelId}`);
+  } catch (error) {
+    console.error(`[handleIncomingCall] Error en canal ${channelId}:`, error);
+  }
 }
 
 export const setupAri = () => {
