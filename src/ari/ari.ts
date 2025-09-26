@@ -37,10 +37,12 @@ export const setupAri = async (app:any) => {
     'Authorization': 'Basic ' + Buffer.from(`${config.user}:${config.pass}`).toString('base64'),
   };
 
-  while(true) {
+  let shouldReconnect = true;
+  while (shouldReconnect) {
     console.log(`Conectando a ARI ${url.toString()} (app=${config.appName})`);
+    let ws: WebSocket | null = null;
     try {
-      const ws = new WebSocket(url.toString(), { headers });
+      ws = new WebSocket(url.toString(), { headers });
 
       ws.on('open', () => console.log('Conectado al WebSocket ARI'));
 
@@ -52,6 +54,12 @@ export const setupAri = async (app:any) => {
             console.log('Llamada entrante:', event.channel.id);
             handleIncomingCall(event.channel.id);
           }
+          if (event.type === 'ApplicationReplaced') {
+            console.warn('Evento ApplicationReplaced recibido. Cerrando aplicación para evitar bucle de reconexión.');
+            shouldReconnect = false;
+            if (ws) ws.close();
+            process.exit(0);
+          }
         } catch (err) {
           console.error('Error procesando evento ARI:', err);
         }
@@ -59,12 +67,23 @@ export const setupAri = async (app:any) => {
 
       ws.on('error', (err) => console.error('Error en WebSocket:', err));
 
-      ws.on('close', () => console.log('Conexión cerrada, reintentando...'));
+      ws.on('close', () => {
+        if (shouldReconnect) {
+          console.log('Conexión cerrada, reintentando...');
+        } else {
+          console.log('Conexión cerrada. No se reintentará.');
+        }
+      });
+
+      // Esperar a que el WebSocket se cierre antes de continuar
+      await new Promise(resolve => ws!.once('close', resolve));
 
     } catch (error) {
       console.error('Fallo conexión ARI:', error);
     }
-    console.log('Reintentando en 5s...');
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    if (shouldReconnect) {
+      console.log('Reintentando en 5s...');
+      await new Promise(resolve => setTimeout(resolve, 5000));
+    }
   }
 };
