@@ -34,7 +34,7 @@ export const setupAri = async (app:any) => {
   url.searchParams.set('pass', config.pass);
 
   const headers: Record<string, string> = {
-    'Authorization': 'Basic ' + btoa(`${config.user}:${config.pass}`),
+    'Authorization': 'Basic ' + Buffer.from(`${config.user}:${config.pass}`).toString('base64'),
   };
 
   let shouldReconnect = true;
