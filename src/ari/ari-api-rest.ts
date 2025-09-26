@@ -1,17 +1,23 @@
+
 const config = {
-	baseUrl: 'http://asterisk.ridinn.com/ari',
-	user: 'node',
-	pass: 'ari_password',
-	appName: 'node',
+  baseUrl: 'http://asterisk.ridinn.com/ari',
+  user: 'node',
+  pass: 'ari_password',
+  appName: 'node',
 };
 
 export async function originateChannel(endpoint: string, app: string): Promise<string> {
   const url = `${config.baseUrl}/channels`;
-  const body = { endpoint, app, extensions: 's' };
+    const body = {
+    endpoint,
+    app,
+    extension: '2002',
+    context: 'from-external'
+  };
   const resp = await fetch(url, {
     method: 'POST',
     headers: {
-      'Authorization': 'Basic ' + Buffer.from(`${config.user}:${config.pass}`).toString('base64'),
+  'Authorization': 'Basic ' + btoa(`${config.user}:${config.pass}`),
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(body),
@@ -32,7 +38,7 @@ export async function answerChannel(channelId: string): Promise<void> {
   await fetch(url, {
     method: 'POST',
     headers: {
-      'Authorization': 'Basic ' + Buffer.from(`${config.user}:${config.pass}`).toString('base64'),
+  'Authorization': 'Basic ' + btoa(`${config.user}:${config.pass}`),
       'Content-Type': 'application/json',
     },
   });
@@ -43,7 +49,7 @@ export async function hangupChannel(channelId: string): Promise<void> {
   await fetch(url, {
     method: 'DELETE',
     headers: {
-      'Authorization': 'Basic ' + Buffer.from(`${config.user}:${config.pass}`).toString('base64'),
+  'Authorization': 'Basic ' + btoa(`${config.user}:${config.pass}`),
       'Content-Type': 'application/json',
     },
   });
@@ -54,7 +60,7 @@ export async function playAudioOnChannel(channelId: string, media: string): Prom
   await fetch(url, {
     method: 'POST',
     headers: {
-      'Authorization': 'Basic ' + Buffer.from(`${config.user}:${config.pass}`).toString('base64'),
+      'Authorization': 'Basic ' + btoa(`${config.user}:${config.pass}`),
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ media ,lang: 'es' }),
@@ -66,7 +72,7 @@ export async function createBridge(): Promise<string> {
   const resp = await fetch(url, {
     method: 'POST',
     headers: {
-      'Authorization': 'Basic ' + Buffer.from(`${config.user}:${config.pass}`).toString('base64'),
+      'Authorization': 'Basic ' + btoa(`${config.user}:${config.pass}`),
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ type: 'mixing' }),
@@ -87,7 +93,7 @@ export async function addChannelsToBridge(bridgeId: string, channelIds: string[]
   await fetch(url, {
     method: 'POST',
     headers: {
-      'Authorization': 'Basic ' + Buffer.from(`${config.user}:${config.pass}`).toString('base64'),
+      'Authorization': 'Basic ' + btoa(`${config.user}:${config.pass}`),
       'Content-Type': 'application/json',
     },
   });
