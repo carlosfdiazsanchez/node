@@ -12,10 +12,14 @@ app.use(express.json());
 app.use('/', answerRouter);
 app.use('/', hangupRouter);
 
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`API escuchando en http://localhost:${PORT}`);
+process.on('SIGINT', () => {
+  console.log('Terminando cliente ARI');
+  process.exit(0);
 });
 
-setupAri();
+process.on('SIGTERM', () => {
+  console.log('Terminando cliente ARI');
+  process.exit(0);
+});
+
+setupAri(app).catch(console.error);

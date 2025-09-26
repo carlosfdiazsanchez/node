@@ -19,7 +19,13 @@ export async function handleIncomingCall(channelId: string) {
   }
 }
 
-export const setupAri = () => {
+export const setupAri = async (app:any) => {
+
+  const PORT = process.env.PORT || 3000;
+
+  app.listen(PORT, () => {
+    console.log(`API escuchando en http://localhost:${PORT}`);
+  });
 
   const url = new URL(config.baseUrl);
 
@@ -31,29 +37,34 @@ export const setupAri = () => {
     'Authorization': 'Basic ' + Buffer.from(`${config.user}:${config.pass}`).toString('base64'),
   };
 
-  const ws = new WebSocket(url.toString(), { headers });
-
-  ws.on('open', () => {
-    console.log('Conectado a ARI WebSocket');
-  });
-
-  ws.on('message', (data: WebSocket.Data) => {
+  while(true) {
+    console.log(`Conectando a ARI ${url.toString()} (app=${config.appName})`);
     try {
-      const event = JSON.parse(data.toString());
-      if (event.type === 'StasisStart' && event.channel && event.application === config.appName) {
-        console.log('Llamada entrante:', event.channel.id);
-        handleIncomingCall(event.channel.id);
-      }
-    } catch (err) {
-      console.error('Error procesando evento ARI:', err);
+      const ws = new WebSocket(url.toString(), { headers });
+
+      ws.on('open', () => console.log('Conectado al WebSocket ARI'));
+
+      ws.on('message', (data: WebSocket.Data) => {
+        try {
+          const event = JSON.parse(data.toString());
+          console.log('Evento:', event.type);
+          if (event.type === 'StasisStart' && event.channel) {
+            console.log('Llamada entrante:', event.channel.id);
+            handleIncomingCall(event.channel.id);
+          }
+        } catch (err) {
+          console.error('Error procesando evento ARI:', err);
+        }
+      });
+
+      ws.on('error', (err) => console.error('Error en WebSocket:', err));
+
+      ws.on('close', () => console.log('Conexión cerrada, reintentando...'));
+
+    } catch (error) {
+      console.error('Fallo conexión ARI:', error);
     }
-  });
-
-  ws.on('error', (err) => {
-    console.error('Error en WebSocket ARI:', err);
-  });
-
-  ws.on('close', () => {
-    console.log('WebSocket ARI cerrado');
-  });
+    console.log('Reintentando en 5s...');
+    await new Promise(resolve => setTimeout(resolve, 5000));
+  }
 };
