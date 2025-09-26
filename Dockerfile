@@ -31,7 +31,7 @@ WORKDIR /app
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/node_modules ./node_modules
 ENV NODE_ENV=production \
-	ARI_URL="wss://pbx.ridinn.com/ari/events" \
+	ARI_URL="wss://asterisk.ridinn.com/ari/events" \
 	ARI_USER="ari_user" \
 	ARI_PASSWORD="ari_password" \
 	ARI_APP_NAME="node" \
