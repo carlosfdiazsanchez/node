@@ -3,10 +3,10 @@ import WebSocket from 'ws';
 import { answerChannel, playAudioOnChannel } from './ari-api-rest.ts';
 
 const config = {
-  baseUrl: process.env.ARI_URL || 'wss://asterisk.ridinn.com/ari/events',
-  user: process.env.ARI_USER || 'node',
-  pass: process.env.ARI_PASS || 'ari_password',
-  appName: process.env.ARI_APP_NAME || 'node',
+  baseUrl: 'wss://asterisk.ridinn.com/ari/events',
+  user: 'node',
+  pass: 'ari_password',
+  appName: 'node',
 };
 
 export async function handleIncomingCall(channelId: string) {
