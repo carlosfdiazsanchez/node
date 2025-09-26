@@ -17,6 +17,23 @@ export interface ARIBridge {
 
 export class ARIClient {
   /**
+   * Detiene la reproducción de audio en un canal (por ejemplo, ringback).
+   */
+  async stopPlayback(channelID: string): Promise<void> {
+    // Obtiene la lista de playbacks activos en el canal y los detiene
+    const resp = await this.doRequest('GET', `/ari/channels/${channelID}/playback`);
+    if (resp.ok) {
+      const playbacks = await resp.json();
+      if (Array.isArray(playbacks)) {
+        for (const pb of playbacks) {
+          if (pb.id) {
+            await this.doRequest('DELETE', `/ari/playbacks/${pb.id}`);
+          }
+        }
+      }
+    }
+  }
+  /**
    * Reproduce un ringback en el canal especificado usando el recurso 'sound:ring'.
    */
   async playRingback(channelID: string): Promise<void> {

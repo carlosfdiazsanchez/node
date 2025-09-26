@@ -58,6 +58,9 @@ async function main() {
             // Si es la primera llamada, originar hacia el destino (2002)
             if (!pendingCalls[channelID]) {
               try {
+                // Aceptar la llamada entrante
+                await ariClient.answerChannel(channelID);
+                console.log('Llamada entrante aceptada (answered):', channelID);
                 const outgoingID = await ariClient.originate('PJSIP/2002', appName);
                 pendingCalls[channelID] = outgoingID;
                 pendingCalls[outgoingID] = channelID;
@@ -70,7 +73,7 @@ async function main() {
                   console.error('Error reproduciendo ringback:', err);
                 }
               } catch (err) {
-                console.error('Error originando llamada:', err);
+                console.error('Error aceptando u originando llamada:', err);
               }
             } else {
               // Cuando el canal destino entra en Stasis, hacer el bridge
@@ -78,6 +81,13 @@ async function main() {
               if (incomingID) {
                 try {
                   console.log(`[BRIDGE] Creando bridge para canales: ${incomingID} y ${channelID}`);
+                  // Detener ringback en el canal de origen antes de hacer el bridge
+                  try {
+                    await ariClient.stopPlayback(incomingID);
+                    console.log('Ringback detenido en canal de origen:', incomingID);
+                  } catch (err) {
+                    console.error('Error deteniendo ringback:', err);
+                  }
                   const bridgeID = await ariClient.createBridge();
                   console.log(`[BRIDGE] Bridge creado: ${bridgeID}`);
                   await ariClient.addChannelToBridge(bridgeID, incomingID);
