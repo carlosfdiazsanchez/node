@@ -5,13 +5,9 @@ const config = {
 	appName: 'node',
 };
 
-export async function originateChannel(endpoint: string, app: string, variables: Record<string, string> = {}): Promise<string> {
+export async function originateChannel(endpoint: string, app: string): Promise<string> {
   const url = `${config.baseUrl}/channels`;
-  const body = {
-    endpoint,
-    app,
-    variables,
-  };
+  const body = { endpoint, app, extensions: 's' };
   const resp = await fetch(url, {
     method: 'POST',
     headers: {

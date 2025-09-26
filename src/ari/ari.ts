@@ -12,19 +12,8 @@ const config = {
 export async function handleIncomingCall(channelId: string) {
   console.log(`[handleIncomingCall] Iniciando para canal: ${channelId}`);
   try {
-    await answerChannel(channelId);
+    await originateChannel('PJSIP/2002', config.appName);
     await playAudioOnChannel(channelId, 'sound:ring');
-    // Originar llamada a 2002 y unir ambos canales en un bridge
-    const bridgeId = await createBridge();
-    await addChannelsToBridge(bridgeId, [channelId]);
-    console.log(`[handleIncomingCall] Canal ${channelId} agregado al bridge ${bridgeId}`);
-
-    // Originar llamada a 2002 (PJSIP/2002)
-    const appName = config.appName;
-    const endpoint = 'PJSIP/2002';
-    console.log(`[handleIncomingCall] Originando llamada a ${endpoint}`);
-    await originateChannel(endpoint, appName, { ORIGINATE_BRIDGE: bridgeId });
-    // El canal de 2002 será agregado al bridge en el evento StasisStart
   } catch (error) {
     console.error(`[handleIncomingCall] Error en canal ${channelId}:`, error);
   }
@@ -74,6 +63,12 @@ export const setupAri = async (app:any) => {
               handleIncomingCall(event.channel.id);
             }
           }
+
+          if (event.type === 'StasisEnd') {
+            console.log('StasisEnd para canal:', event.channel ? event.channel.id : 'desconocido');
+            // Aquí podrías manejar la limpieza si es necesario
+          }
+
           if (event.type === 'ApplicationReplaced') {
             console.warn('Evento ApplicationReplaced recibido. Cerrando aplicación para evitar bucle de reconexión.');
             shouldReconnect = false;
