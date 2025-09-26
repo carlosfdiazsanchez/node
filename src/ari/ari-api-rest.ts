@@ -2,7 +2,7 @@
 import { Buffer } from 'node:buffer';
 
 const config = {
-  baseUrl: 'http://asterisk.ridinn.com/ari',
+  baseUrl: 'https://asterisk.ridinn.com/ari',
   user: 'node',
   pass: 'ari_password',
   appName: 'node',
