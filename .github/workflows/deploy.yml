@@ -1,0 +1,29 @@
+name: CI/CD Node App
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Deploy to Droplet via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DROPLET_IP }}
+          username: ${{ secrets.DROPLET_USER }}
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          script: |
+            cd /var/www/node
+
+            # Asegurarse de estar en la rama correcta
+            git fetch origin main
+            git reset --hard origin/main
+
+            # Limpiar contenedores e imágenes anteriores de manera segura
+            docker-compose up -d --build
