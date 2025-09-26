@@ -13,7 +13,7 @@ app.use(express.json());
 // Inicialización de ARI y rutas
 async function main() {
   const ariURL = process.env.ARI_URL || 'wss://asterisk.ridinn.com/ari/events';
-  const ariUser = process.env.ARI_USER || 'ari_user';
+  const ariUser = process.env.ARI_USER || 'node';
   const ariPass = process.env.ARI_PASSWORD || 'ari_password';
   const appName = process.env.ARI_APP_NAME || 'node';
 
