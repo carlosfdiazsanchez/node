@@ -12,7 +12,17 @@ const config = {
 export async function handleIncomingCall(channelId: string) {
   console.log(`[handleIncomingCall] Iniciando para canal: ${channelId}`);
   try {
+    // 1. Contestar la llamada entrante
+    await answerChannel(channelId);
+    console.log(`[handleIncomingCall] Canal ${channelId} contestado.`);
+
+    // 2. Reproducir música de espera (puedes cambiar la ruta del audio si lo deseas)
+    await playAudioOnChannel(channelId, 'sound:music');
+    console.log(`[handleIncomingCall] Música de espera reproducida en canal ${channelId}.`);
+
+    // 3. Originar la llamada al destino
     await originateChannel('PJSIP/2002', config.appName);
+    console.log(`[handleIncomingCall] Canal originado a PJSIP/2002.`);
   } catch (error) {
     console.error(`[handleIncomingCall] Error en canal ${channelId}:`, error);
   }

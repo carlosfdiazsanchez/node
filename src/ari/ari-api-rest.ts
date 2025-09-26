@@ -71,15 +71,19 @@ export async function hangupChannel(channelId: string): Promise<void> {
 }
 
 export async function playAudioOnChannel(channelId: string, media: string): Promise<void> {
-  const url = `${config.baseUrl}/channels/${channelId}/play`;
-  await fetch(url, {
-    method: 'POST',
-    headers: {
-  'Authorization': 'Basic ' + Buffer.from(`${config.user}:${config.pass}`).toString('base64'),
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ media ,lang: 'es' }),
+  try {
+      const url = `${config.baseUrl}/channels/${channelId}/play`;
+      await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Basic ' + Buffer.from(`${config.user}:${config.pass}`).toString('base64'),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ media ,lang: 'es' }),
   });
+  } catch (error) {
+      console.error(`[playAudioOnChannel] Error al reproducir audio en canal ${channelId}:`, error);
+  }
 }
 
 export async function createBridge(): Promise<string> {
