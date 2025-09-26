@@ -108,7 +108,7 @@ export async function addChannelsToBridge(bridgeId: string, channelIds: string[]
   await fetch(url, {
     method: 'POST',
     headers: {
-  'Authorization': 'Basic ' + Buffer.from(`${config.user}:${config.pass}`).toString('base64'),
+      'Authorization': 'Basic ' + Buffer.from(`${config.user}:${config.pass}`).toString('base64'),
       'Content-Type': 'application/json',
     },
   });

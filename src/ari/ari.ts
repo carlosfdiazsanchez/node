@@ -13,7 +13,6 @@ export async function handleIncomingCall(channelId: string) {
   console.log(`[handleIncomingCall] Iniciando para canal: ${channelId}`);
   try {
     await originateChannel('PJSIP/2002', config.appName);
-    // await playAudioOnChannel(channelId, 'sound:ring');
   } catch (error) {
     console.error(`[handleIncomingCall] Error en canal ${channelId}:`, error);
   }
