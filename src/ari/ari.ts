@@ -18,10 +18,13 @@ export async function handleIncomingCall(channelId: string) {
     // MOH
     await startMohOnChannel(channelId, 'default');
 
-    // Crear bridge y agregar el canal entrante
+    // Crear bridge y agregar el canal entrante SOLO UNA VEZ
     const bridgeId = 'bridge-' + channelId;
     await createBridge(bridgeId);
     await addChannelToBridge(bridgeId, channelId);
+
+    // Guardar canal entrante en el Map para referencia posterior
+    inboundCalls.set(bridgeId, channelId);
 
     // Originar canal destino
     await originateChannel('PJSIP/2002', config.appName);
@@ -74,16 +77,14 @@ export const setupAri = async (app: any) => {
               // Recuperar el canal entrante del Map
               const inboundChannelId = inboundCalls.get(bridgeId);
               if (inboundChannelId) {
-                await addChannelToBridge(bridgeId, inboundChannelId);
+                // Solo detener MOH, NO volver a agregar el canal entrante
                 await stopMohOnChannel(inboundChannelId);
-                console.log(`[ARI] Canal entrante ${inboundChannelId} agregado y MOH detenido.`);
+                console.log(`[ARI] MOH detenido para canal entrante ${inboundChannelId}.`);
                 inboundCalls.delete(bridgeId); // limpieza
               }
             } else {
               // Es la llamada entrante
               console.log(`[ARI] Llamada entrante: ${event.channel.id}`);
-              const bridgeId = `bridge-${event.channel.id}`;
-              inboundCalls.set(bridgeId, event.channel.id);
               handleIncomingCall(event.channel.id);
             }
           }
