@@ -1,6 +1,6 @@
 
 import WebSocket from 'ws';
-import { answerChannel, playAudioOnChannel, createBridge, addChannelsToBridge, originateChannel } from './ari-api-rest.ts';
+import { answerChannel, startMohOnChannel, createBridge, addChannelToBridge, originateChannel, stopMohOnChannel } from './ari-api-rest.ts';
 
 const config = {
   baseUrl: 'wss://asterisk.ridinn.com/ari/events',
@@ -12,24 +12,29 @@ const config = {
 export async function handleIncomingCall(channelId: string) {
   console.log(`[handleIncomingCall] Iniciando para canal: ${channelId}`);
   try {
-    // 1. Contestar la llamada entrante
+    // Contestar
     await answerChannel(channelId);
-    console.log(`[handleIncomingCall] Canal ${channelId} contestado.`);
 
-    // 2. Reproducir música de espera (puedes cambiar la ruta del audio si lo deseas)
-    await playAudioOnChannel(channelId, 'sound:music');
-    console.log(`[handleIncomingCall] Música de espera reproducida en canal ${channelId}.`);
+    // MOH
+    await startMohOnChannel(channelId, 'default');
 
-    // 3. Originar la llamada al destino
+    // Crear bridge y agregar el canal entrante
+    const bridgeId = 'bridge-' + channelId;
+    await createBridge(bridgeId);
+    await addChannelToBridge(bridgeId, channelId);
+
+    // Originar canal destino
     await originateChannel('PJSIP/2002', config.appName);
-    console.log(`[handleIncomingCall] Canal originado a PJSIP/2002.`);
+
+    console.log(`[handleIncomingCall] Originado canal a PJSIP/2002 con bridgeId=${bridgeId}`);
   } catch (error) {
     console.error(`[handleIncomingCall] Error en canal ${channelId}:`, error);
   }
 }
 
-export const setupAri = async (app:any) => {
+const inboundCalls = new Map<string, string>();
 
+export const setupAri = async (app: any) => {
   const PORT = process.env.PORT || 3000;
 
   app.listen(PORT, () => {
@@ -55,20 +60,30 @@ export const setupAri = async (app:any) => {
 
       ws.on('open', () => console.log('Conectado al WebSocket ARI'));
 
-      ws.on('message', (data: WebSocket.Data) => {
+      ws.on('message', async (data: WebSocket.Data) => {
         try {
           const event = JSON.parse(data.toString());
-          //console.log('Evento:', event.type);
+
           if (event.type === 'StasisStart' && event.channel) {
-            // Si el canal tiene variable ORIGINATE_BRIDGE, es el canal originado a 2002
-            const bridgeId = event.args && event.args.length > 0 ? event.args[0] : (event.channel.variables && event.channel.variables.ORIGINATE_BRIDGE);
-            if (bridgeId) {
-              // Es el canal de 2002 originado, agregarlo al bridge
-              addChannelsToBridge(bridgeId, [event.channel.id]);
-              console.log(`[ARI] Canal ${event.channel.id} (2002) agregado al bridge ${bridgeId}`);
+            if (event.args && event.args.length > 0) {
+              // Es el canal ORIGINADO
+              const bridgeId = event.args[0];
+              await addChannelToBridge(bridgeId, event.channel.id);
+              console.log(`[ARI] Canal originado ${event.channel.id} agregado al bridge ${bridgeId}`);
+
+              // Recuperar el canal entrante del Map
+              const inboundChannelId = inboundCalls.get(bridgeId);
+              if (inboundChannelId) {
+                await addChannelToBridge(bridgeId, inboundChannelId);
+                await stopMohOnChannel(inboundChannelId);
+                console.log(`[ARI] Canal entrante ${inboundChannelId} agregado y MOH detenido.`);
+                inboundCalls.delete(bridgeId); // limpieza
+              }
             } else {
               // Es la llamada entrante
-              console.log('Llamada entrante:', event.channel.id);
+              console.log(`[ARI] Llamada entrante: ${event.channel.id}`);
+              const bridgeId = `bridge-${event.channel.id}`;
+              inboundCalls.set(bridgeId, event.channel.id);
               handleIncomingCall(event.channel.id);
             }
           }
@@ -99,7 +114,6 @@ export const setupAri = async (app:any) => {
         }
       });
 
-      // Esperar a que el WebSocket se cierre antes de continuar
       await new Promise(resolve => ws!.once('close', resolve));
 
     } catch (error) {
@@ -111,3 +125,4 @@ export const setupAri = async (app:any) => {
     }
   }
 };
+
